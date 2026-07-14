@@ -14,10 +14,13 @@
             </div>
             <div>
                 {% if user.is_authenticated %}
-                    <a href="/" class="mx-4">Dashboard</a>
+                    <a href="/" class="mx-4 font-bold text-white hover:text-gray-300">Dashboard</a>
+                    <a href="{% url 'transaction_list' %}" class="mx-4 text-white hover:text-gray-300">History</a>
+                    <a href="{% url 'add_transaction' %}" class="mx-4 text-green-400 font-bold hover:text-green-300">+ Add Transaction</a>
+                    <a href="{% url 'add_goal' %}" class="mx-4 text-blue-400 font-bold hover:text-blue-300">+ Add Goal</a>
                     <form method="post" action="{% url 'logout' %}" class="inline">
                         {% csrf_token %}
-                        <button type="submit" class="mx-4 text-red-400">Logout</button>
+                        <button type="submit" class="mx-4 text-red-400 hover:text-red-300">Logout</button>
                     </form>
                 {% else %}
                     <a href="{% url 'login' %}" class="mx-4">Login</a>
