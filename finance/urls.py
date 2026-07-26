@@ -6,5 +6,6 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('transaction/add/', views.add_transaction, name='add_transaction'),
     path('goal/add/', views.add_goal, name='add_goal'),
+    path('goal/edit/<int:id>/', views.edit_goal, name='edit_goal'), # এই নতুন লাইনটি যোগ হলো
     path('transactions/', views.transaction_list, name='transaction_list'),
 ]

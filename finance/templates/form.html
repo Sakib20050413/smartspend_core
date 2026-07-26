@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-md mx-auto card rounded-3xl overflow-hidden mt-10">
+<div class="bg-grad px-8 py-8 text-white text-center"><h2 class="text-3xl font-extrabold">{{ t }}</h2></div>
+<div class="p-8"><form method="post">{% csrf_token %}{{ f }}<button class="bg-grad w-full text-white font-bold py-3.5 rounded-xl mt-4 shadow-lg">Save</button></form>
+{% if t == 'Create Account' %}<p class="mt-6 text-center text-sm font-bold text-slate-500">Have an account? <a href="{% url 'login' %}" class="text-indigo-600">Log in</a></p>{% endif %}</div>
+</div>
+{% endblock %}
