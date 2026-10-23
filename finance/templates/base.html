@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>SmartSpend</title>
+<script src="https://cdn.tailwindcss.com"></script><script src="https://unpkg.com/lucide@latest"></script>
+<style type="text/tailwindcss">
+@layer utilities {
+.bg-grad { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+.card { border: 1px solid rgba(226,232,240,.9); box-shadow: 0 18px 45px rgba(15,23,42,.06); background: #fff; }
+input, select { @apply w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500 mb-4; }
+label { @apply block text-sm font-bold text-slate-700 mb-1 mt-3; }
+.helptext, form ul { @apply hidden; }
+}
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+<nav class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b px-6 py-3 flex justify-between items-center">
+<a href="{% url 'dashboard' %}" class="flex items-center gap-3"><span class="bg-grad flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-lg"><i data-lucide="wallet-cards"></i></span><span class="font-extrabold text-lg">SmartSpend</span></a>
+<div class="flex gap-4 items-center">
+{% if user.is_authenticated %}<a href="{% url 'dashboard' %}" class="font-bold text-slate-600">Dashboard</a><a href="{% url 'transaction_list' %}" class="font-bold text-slate-600">History</a><a href="{% url 'add_transaction' %}" class="bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold text-sm">+ Add</a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="text-rose-500 font-bold text-sm mt-1">Logout</button></form>
+{% else %}<a href="{% url 'login' %}" class="font-bold text-slate-600">Log in</a><a href="{% url 'register' %}" class="bg-grad text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg">Create account</a>{% endif %}
+</div>
+</nav>
+<main class="max-w-6xl mx-auto p-6">{% block content %}{% endblock %}</main>
+<script>lucide.createIcons();</script>
+</body>
+</html>

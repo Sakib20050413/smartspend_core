@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="text-2xl font-extrabold mb-6">Transactions</h2>
+<div class="card rounded-2xl overflow-hidden">
+<table class="w-full text-left"><thead class="bg-slate-50 text-sm text-slate-500"><tr><th class="p-4">Title</th><th class="p-4">Category</th><th class="p-4 text-right">Amount</th></tr></thead><tbody class="divide-y divide-slate-100">
+{% for i in tx %}
+<tr class="hover:bg-slate-50 transition"><td class="p-4 font-bold">{{ i.title }}<br><span class="text-xs text-slate-400">{{ i.date|date:"d M Y" }}</span></td><td class="p-4 font-bold text-slate-500">{{ i.category }}</td><td class="p-4 text-right font-extrabold {% if i.transaction_type == 'Income' %}text-emerald-600{% else %}text-rose-600{% endif %}">{% if i.transaction_type == 'Income' %}+{% else %}-{% endif %}৳{{ i.amount }}</td></tr>
+{% empty %}<tr><td colspan="3" class="p-6 text-center text-slate-400 font-bold">No transactions found.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}
