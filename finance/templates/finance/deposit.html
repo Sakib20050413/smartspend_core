@@ -13,119 +13,174 @@
     </div>
 </div>
 
-<div class="form-shell glass-panel">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle);">
-        <div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Crediting Wallet</div>
-            <div style="font-size: 1.15rem; font-weight: 700; color: #ffffff;">Primary BDT Account</div>
+<!-- Bento 2-Column Split Layout (100% Full Width, Zero Side Gaps) -->
+<div class="bento-split-layout">
+    <!-- Left Column: Interactive Action Form -->
+    <div class="glass-panel bento-main-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle);">
+            <div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Crediting Wallet</div>
+                <div style="font-size: 1.25rem; font-weight: 800; color: #ffffff;">Primary BDT Account</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Current Balance</div>
+                <div style="font-size: 1.25rem; font-weight: 800; color: var(--primary); font-family: var(--font-mono);">৳{{ wallet.balance }}</div>
+            </div>
         </div>
-        <div style="text-align: right;">
-            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Current Balance</div>
-            <div style="font-size: 1.15rem; font-weight: 700; color: var(--primary); font-family: var(--font-mono);">৳{{ wallet.balance }}</div>
-        </div>
+
+        <form method="post" action="{% url 'deposit' %}" id="depositForm">
+            {% csrf_token %}
+
+            <!-- Provider Selection Cards -->
+            <div class="form-group">
+                <label class="form-label">Select MFS Provider Rail</label>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="provider" value="bkash" checked style="display: none;" onchange="selectMfs('bkash', 'bKash Direct Rail', '#e2136e')">
+                        <div class="mfs-badge-logo bkash" id="btn-bkash" style="border: 2px solid #e2136e;">
+                            <i data-lucide="smartphone" style="width: 28px; height: 28px;"></i>
+                            <span>bKash</span>
+                        </div>
+                    </label>
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="provider" value="nagad" style="display: none;" onchange="selectMfs('nagad', 'Nagad Instant Rail', '#f7941d')">
+                        <div class="mfs-badge-logo nagad" id="btn-nagad" style="opacity: 0.55;">
+                            <i data-lucide="zap" style="width: 28px; height: 28px;"></i>
+                            <span>Nagad</span>
+                        </div>
+                    </label>
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="provider" value="rocket" style="display: none;" onchange="selectMfs('rocket', 'Rocket Core Rail', '#8c3494')">
+                        <div class="mfs-badge-logo rocket" id="btn-rocket" style="opacity: 0.55;">
+                            <i data-lucide="send" style="width: 28px; height: 28px;"></i>
+                            <span>Rocket</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- MFS Mobile Number -->
+            <div class="form-group">
+                <label class="form-label">MFS Mobile Number</label>
+                <div class="input-wrapper input-with-icon">
+                    <i data-lucide="phone" class="input-icon" style="width: 20px; height: 20px;"></i>
+                    <input type="text" id="mfsPhoneInput" name="mfs_number" class="form-input" placeholder="017XXXXXXXX" required oninput="updateLivePreview()">
+                </div>
+            </div>
+
+            <!-- Deposit Amount -->
+            <div class="form-group">
+                <label class="form-label">Deposit Amount (BDT ৳)</label>
+                <div class="input-wrapper input-with-icon">
+                    <i data-lucide="banknote" class="input-icon" style="width: 20px; height: 20px;"></i>
+                    <input type="number" id="depositAmount" name="amount" class="form-input" placeholder="1000.00" step="0.01" min="10" required oninput="updateLivePreview()">
+                </div>
+
+                <!-- Quick Amount Touch Buttons -->
+                <div style="display: flex; gap: 0.65rem; margin-top: 0.85rem; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;" onclick="setAmount(500)">+ ৳500</button>
+                    <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;" onclick="setAmount(1000)">+ ৳1,000</button>
+                    <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;" onclick="setAmount(2500)">+ ৳2,500</button>
+                    <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;" onclick="setAmount(5000)">+ ৳5,000</button>
+                    <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;" onclick="setAmount(10000)">+ ৳10,000</button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" style="padding: 1.1rem; font-size: 1.05rem; margin-top: 1rem;">
+                <i data-lucide="check-circle" style="width: 20px; height: 20px;"></i>
+                <span>Confirm Instant Cash-In</span>
+            </button>
+        </form>
     </div>
 
-    <form method="post" action="{% url 'deposit' %}" id="depositForm">
-        {% csrf_token %}
+    <!-- Right Column: Live Graphical MFS Card Visualizer -->
+    <div class="glass-panel bento-visual-card" id="mfsPreviewCard" style="background: linear-gradient(135deg, rgba(226, 19, 110, 0.15) 0%, rgba(12, 17, 32, 0.95) 100%); border-color: rgba(226, 19, 110, 0.4);">
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                    <div style="width: 14px; height: 14px; border-radius: 9999px; background: #e2136e;" id="indicatorDot"></div>
+                    <span style="font-weight: 800; font-size: 1.15rem; color: #ffffff;" id="previewRailTitle">bKash Direct Rail</span>
+                </div>
+                <span class="badge badge-success">ZERO FEES</span>
+            </div>
 
-        <!-- Provider Selection -->
-        <div class="form-group">
-            <label class="form-label">Select Mobile Financial Provider</label>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
-                <label style="cursor: pointer;">
-                    <input type="radio" name="provider" value="bkash" checked style="display: none;" onchange="updateProvider('bkash')">
-                    <div class="mfs-badge-logo bkash" id="btn-bkash" style="border: 2px solid #e2136e; padding: 1rem 0.5rem;">
-                        <i data-lucide="smartphone" style="width: 24px; height: 24px;"></i>
-                        <span style="font-weight: 800;">bKash</span>
-                    </div>
-                </label>
-                <label style="cursor: pointer;">
-                    <input type="radio" name="provider" value="nagad" style="display: none;" onchange="updateProvider('nagad')">
-                    <div class="mfs-badge-logo nagad" id="btn-nagad" style="padding: 1rem 0.5rem; opacity: 0.6;">
-                        <i data-lucide="zap" style="width: 24px; height: 24px;"></i>
-                        <span style="font-weight: 800;">Nagad</span>
-                    </div>
-                </label>
-                <label style="cursor: pointer;">
-                    <input type="radio" name="provider" value="rocket" style="display: none;" onchange="updateProvider('rocket')">
-                    <div class="mfs-badge-logo rocket" id="btn-rocket" style="padding: 1rem 0.5rem; opacity: 0.6;">
-                        <i data-lucide="send" style="width: 24px; height: 24px;"></i>
-                        <span style="font-weight: 800;">Rocket</span>
-                    </div>
-                </label>
+            <!-- Big Graphical Amount Display -->
+            <div style="text-align: center; padding: 2.5rem 1rem; background: rgba(0,0,0,0.3); border-radius: var(--radius-lg); margin-bottom: 2rem;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Crediting Amount</div>
+                <div style="font-size: 3rem; font-weight: 800; color: #ffffff; font-family: var(--font-mono); margin: 0.5rem 0;" id="liveAmountDisplay">
+                    ৳0.00
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);" id="livePhoneDisplay">
+                    Source: Enter MFS Number
+                </div>
+            </div>
+
+            <!-- Live Settlement Architecture Specifications -->
+            <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                    <span style="color: var(--text-muted);">Protocol:</span>
+                    <span style="font-weight: 700; color: #ffffff;">MFS Direct Injection</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                    <span style="color: var(--text-muted);">Platform Fee:</span>
+                    <span style="font-weight: 700; color: var(--success);">৳0.00 (100% Free)</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                    <span style="color: var(--text-muted);">Double-Entry Leg:</span>
+                    <span style="font-weight: 700; color: #ffffff;">Settlement Pool → User Wallet</span>
+                </div>
             </div>
         </div>
 
-        <!-- MFS Account Number -->
-        <div class="form-group">
-            <label class="form-label">MFS Mobile Number</label>
-            <div class="input-wrapper input-with-icon">
-                <i data-lucide="phone" class="input-icon" style="width: 18px; height: 18px;"></i>
-                <input type="text" name="mfs_number" class="form-input" placeholder="017XXXXXXXX" required>
-            </div>
-            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem;">
-                Supported: Grameenphone, Robi, Banglalink, Teletalk numbers.
-            </div>
+        <div style="padding-top: 1.5rem; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 0.75rem;">
+            <i data-lucide="shield-check" style="width: 22px; height: 22px; color: var(--primary);"></i>
+            <span style="font-size: 0.85rem; color: var(--text-secondary);">End-to-end encrypted with zero regulatory concealment.</span>
         </div>
-
-        <!-- Deposit Amount -->
-        <div class="form-group">
-            <label class="form-label">Deposit Amount (BDT ৳)</label>
-            <div class="input-wrapper input-with-icon">
-                <i data-lucide="banknote" class="input-icon" style="width: 18px; height: 18px;"></i>
-                <input type="number" id="depositAmount" name="amount" class="form-input" placeholder="1000.00" step="0.01" min="10" required>
-            </div>
-
-            <!-- Quick Amount Chips -->
-            <div style="display: flex; gap: 0.5rem; margin-top: 0.65rem; flex-wrap: wrap;">
-                <button type="button" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;" onclick="setAmount(500)">+ ৳500</button>
-                <button type="button" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;" onclick="setAmount(1000)">+ ৳1,000</button>
-                <button type="button" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;" onclick="setAmount(2500)">+ ৳2,500</button>
-                <button type="button" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;" onclick="setAmount(5000)">+ ৳5,000</button>
-            </div>
-        </div>
-
-        <!-- Settlement Summary -->
-        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.15rem; margin-bottom: 1.75rem;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem;">
-                <span style="color: var(--text-secondary);">Deposit Fee:</span>
-                <span style="color: var(--success); font-weight: 700;">৳0.00 (Free)</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem;">
-                <span style="color: var(--text-secondary);">Settlement Method:</span>
-                <span style="color: #ffffff;">Liquidity Pool Injection</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                <span style="color: var(--text-secondary);">Execution Time:</span>
-                <span style="color: #ffffff;">Instant (&lt; 200ms)</span>
-            </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-block">
-            <i data-lucide="check" style="width: 18px; height: 18px;"></i>
-            <span>Confirm MFS Cash-In</span>
-        </button>
-    </form>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-    function updateProvider(provider) {
+    let currentBrand = 'bkash';
+    let brandColors = {
+        'bkash': { color: '#e2136e', bg: 'rgba(226, 19, 110, 0.15)', border: 'rgba(226, 19, 110, 0.4)' },
+        'nagad': { color: '#f7941d', bg: 'rgba(247, 148, 29, 0.15)', border: 'rgba(247, 148, 29, 0.4)' },
+        'rocket': { color: '#8c3494', bg: 'rgba(140, 52, 148, 0.15)', border: 'rgba(140, 52, 148, 0.4)' }
+    };
+
+    function selectMfs(provider, title, color) {
+        currentBrand = provider;
         ['bkash', 'nagad', 'rocket'].forEach(p => {
             const el = document.getElementById('btn-' + p);
             if (p === provider) {
                 el.style.opacity = '1';
-                el.style.borderWidth = '2px';
+                el.style.border = '2px solid ' + color;
             } else {
-                el.style.opacity = '0.6';
-                el.style.borderWidth = '1px';
+                el.style.opacity = '0.55';
+                el.style.border = '1px solid transparent';
             }
         });
+
+        document.getElementById('previewRailTitle').innerText = title;
+        document.getElementById('indicatorDot').style.background = color;
+        
+        const card = document.getElementById('mfsPreviewCard');
+        const b = brandColors[provider];
+        card.style.background = `linear-gradient(135deg, ${b.bg} 0%, rgba(12, 17, 32, 0.95) 100%)`;
+        card.style.borderColor = b.border;
     }
 
     function setAmount(val) {
         document.getElementById('depositAmount').value = val;
+        updateLivePreview();
+    }
+
+    function updateLivePreview() {
+        const amt = parseFloat(document.getElementById('depositAmount').value) || 0;
+        const phone = document.getElementById('mfsPhoneInput').value.trim();
+        document.getElementById('liveAmountDisplay').innerText = '৳' + amt.toFixed(2);
+        document.getElementById('livePhoneDisplay').innerText = phone ? ('Source Account: ' + phone) : 'Source: Enter MFS Number';
     }
 </script>
 {% endblock %}

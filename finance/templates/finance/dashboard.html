@@ -7,30 +7,30 @@
 <div class="top-header">
     <div class="header-title-block">
         <h1>
-            <span>Overview</span>
+            <span>Executive Dashboard</span>
             <span class="badge badge-success">LIVE LEDGER</span>
         </h1>
-        <p>Real-time double-entry balances for <strong>{{ user.username }}</strong></p>
+        <p>Real-time double-entry liquidity portfolio for <strong>{{ user.username }}</strong></p>
     </div>
 
     <div class="header-actions">
         <div class="currency-switcher">
             <a href="?currency=BDT" class="currency-tab {% if active_curr == 'BDT' %}active{% endif %}">
-                <span>৳ BDT</span>
+                <span>🇧🇩 ৳ BDT</span>
             </a>
             <a href="?currency=USD" class="currency-tab {% if active_curr == 'USD' %}active{% endif %}">
-                <span>$ USD</span>
+                <span>🇺🇸 $ USD</span>
             </a>
         </div>
     </div>
 </div>
 
-<!-- Primary Stats Grid -->
-<div class="stats-grid">
-    <!-- Active Balance Card -->
-    <div class="glass-panel stat-card featured-balance">
+<!-- 4-Card Hero Metrics Grid (Full Width Edge-to-Edge) -->
+<div class="stats-grid-4">
+    <!-- Active Available Liquidity -->
+    <div class="stat-card featured-balance">
         <div class="stat-header">
-            <span class="stat-title">{{ active_curr }} Available Liquidity</span>
+            <span class="stat-title">{{ active_curr }} Available Balance</span>
             <div class="stat-icon-badge">
                 <i data-lucide="wallet" style="width: 20px; height: 20px; color: var(--primary);"></i>
             </div>
@@ -44,33 +44,33 @@
         <div class="stat-footer">
             <span>ID: {{ active_wallet.id|stringformat:"s"|slice:":8" }}...</span>
             <span class="trend-badge trend-up">
-                <i data-lucide="check" style="width: 14px; height: 14px;"></i>
-                <span>100% AUDITED</span>
+                <i data-lucide="shield-check" style="width: 14px; height: 14px;"></i>
+                <span>AUDITED</span>
             </span>
         </div>
     </div>
 
-    <!-- Monthly Inflow -->
-    <div class="glass-panel stat-card">
+    <!-- 30-Day Inflow -->
+    <div class="stat-card">
         <div class="stat-header">
             <span class="stat-title">Inflow (30 Days)</span>
             <div class="stat-icon-badge">
-                <i data-lucide="arrow-down-right" style="width: 20px; height: 20px; color: var(--success);"></i>
+                <i data-lucide="arrow-down-left" style="width: 20px; height: 20px; color: var(--success);"></i>
             </div>
         </div>
         <div>
-            <div class="balance-value" style="font-size: 2rem; color: var(--success);">
+            <div class="balance-value" style="font-size: 1.85rem; color: var(--success);">
                 +{% if active_curr == 'BDT' %}৳{% else %}${% endif %}{{ total_inflow }}
             </div>
         </div>
         <div class="stat-footer">
-            <span>Deposits & Transfers</span>
+            <span>MFS Deposits & Credits</span>
             <span class="trend-badge trend-up">+14.2%</span>
         </div>
     </div>
 
-    <!-- Monthly Outflow -->
-    <div class="glass-panel stat-card">
+    <!-- 30-Day Outflow -->
+    <div class="stat-card">
         <div class="stat-header">
             <span class="stat-title">Outflow (30 Days)</span>
             <div class="stat-icon-badge">
@@ -78,118 +78,148 @@
             </div>
         </div>
         <div>
-            <div class="balance-value" style="font-size: 2rem; color: var(--danger);">
+            <div class="balance-value" style="font-size: 1.85rem; color: var(--danger);">
                 -{% if active_curr == 'BDT' %}৳{% else %}${% endif %}{{ total_outflow }}
             </div>
         </div>
         <div class="stat-footer">
-            <span>P2P Spends & Fees</span>
+            <span>Transfers & Spends</span>
             <span class="trend-badge trend-down">-3.8%</span>
+        </div>
+    </div>
+
+    <!-- Net Reserves -->
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Total Liquid Reserves</span>
+            <div class="stat-icon-badge">
+                <i data-lucide="pie-chart" style="width: 20px; height: 20px; color: var(--accent-indigo);"></i>
+            </div>
+        </div>
+        <div>
+            <div class="balance-value" style="font-size: 1.85rem; color: #ffffff;">
+                ৳{{ net_reserves_bdt }}
+            </div>
+        </div>
+        <div class="stat-footer">
+            <span>BDT + USD Converted</span>
+            <span class="badge badge-info">MULTI-ASSET</span>
         </div>
     </div>
 </div>
 
-<!-- Quick Action Strip -->
+<!-- 4 Quick Actions (Full Width) -->
 <div class="quick-action-strip">
     <a href="{% url 'transfer' %}?currency={{ active_curr }}" class="action-chip send">
         <div class="action-chip-icon">
-            <i data-lucide="send" style="width: 20px; height: 20px;"></i>
+            <i data-lucide="send" style="width: 22px; height: 22px;"></i>
         </div>
         <div>
             <div>Send Money</div>
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Instant P2P Transfer</div>
+            <div style="font-size: 0.775rem; color: var(--text-muted); font-weight: 500;">Atomic P2P Transfer</div>
         </div>
     </a>
 
     <a href="{% url 'deposit' %}" class="action-chip deposit">
         <div class="action-chip-icon">
-            <i data-lucide="smartphone" style="width: 20px; height: 20px;"></i>
+            <i data-lucide="smartphone" style="width: 22px; height: 22px;"></i>
         </div>
         <div>
             <div>MFS Cash-In</div>
-            <div style="font-size: 0.75rem; color: var(--text-muted);">bKash • Nagad • Rocket</div>
+            <div style="font-size: 0.775rem; color: var(--text-muted); font-weight: 500;">bKash • Nagad • Rocket</div>
         </div>
     </a>
 
     <a href="{% url 'exchange' %}" class="action-chip exchange">
         <div class="action-chip-icon">
-            <i data-lucide="arrow-left-right" style="width: 20px; height: 20px;"></i>
+            <i data-lucide="arrow-left-right" style="width: 22px; height: 22px;"></i>
         </div>
         <div>
             <div>FX Bridge</div>
-            <div style="font-size: 0.75rem; color: var(--text-muted);">BDT ⇋ USD Converter</div>
+            <div style="font-size: 0.775rem; color: var(--text-muted); font-weight: 500;">BDT ⇋ USD Converter</div>
         </div>
     </a>
 
     <a href="{% url 'cards' %}" class="action-chip card">
         <div class="action-chip-icon">
-            <i data-lucide="credit-card" style="width: 20px; height: 20px;"></i>
+            <i data-lucide="credit-card" style="width: 22px; height: 22px;"></i>
         </div>
         <div>
-            <div>Virtual Card</div>
-            <div style="font-size: 0.75rem; color: var(--text-muted);">BaaS Titanium Visa</div>
+            <div>Virtual Cards</div>
+            <div style="font-size: 0.775rem; color: var(--text-muted); font-weight: 500;">BaaS Titanium Visa</div>
         </div>
     </a>
 </div>
 
-<!-- Split Section: Interactive Chart & MFS Gateway Status -->
-<div class="dashboard-split">
-    <!-- Chart.js Cashflow Analysis -->
+<!-- Dual-Chart Bento Grid (Cash Flow Bar + Asset Allocation Donut) -->
+<div class="dashboard-charts-grid">
+    <!-- Cashflow Bar Chart -->
     <div class="glass-panel analytics-card">
         <div class="card-title-row">
-            <div class="card-title">Cash Flow & Activity Trends</div>
-            <span class="badge badge-info">7 DAYS TRAILING</span>
+            <div class="card-title">
+                <i data-lucide="activity" style="width: 20px; height: 20px; color: var(--primary);"></i>
+                <span>Cash Flow Volume (7 Days)</span>
+            </div>
+            <span class="badge badge-info">TRAILING</span>
         </div>
         <div class="chart-wrapper">
             <canvas id="cashflowChart"></canvas>
         </div>
     </div>
 
-    <!-- MFS Bangladesh Rail Integrations -->
-    <div class="glass-panel side-summary-card">
-        <div>
-            <div class="card-title-row">
-                <div class="card-title">MFS Direct Rails</div>
-                <span class="badge badge-success">ONLINE</span>
+    <!-- Asset Allocation Doughnut Chart -->
+    <div class="glass-panel analytics-card">
+        <div class="card-title-row">
+            <div class="card-title">
+                <i data-lucide="pie-chart" style="width: 20px; height: 20px; color: var(--accent-indigo);"></i>
+                <span>Portfolio Allocation</span>
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-secondary);">
-                Direct liquidity bridges connected with Bangladesh Mobile Financial Services.
-            </p>
-            <div class="mfs-quick-logos">
-                <a href="{% url 'deposit' %}" class="mfs-badge-logo bkash">
-                    <i data-lucide="smartphone" style="width: 22px; height: 22px;"></i>
-                    <span>bKash</span>
-                </a>
-                <a href="{% url 'deposit' %}" class="mfs-badge-logo nagad">
-                    <i data-lucide="zap" style="width: 22px; height: 22px;"></i>
-                    <span>Nagad</span>
-                </a>
-                <a href="{% url 'deposit' %}" class="mfs-badge-logo rocket">
-                    <i data-lucide="send" style="width: 22px; height: 22px;"></i>
-                    <span>Rocket</span>
-                </a>
-            </div>
+            <span class="badge badge-purple">EQUIV. ৳</span>
         </div>
-
-        <div style="padding-top: 1.25rem; border-top: 1px solid var(--border-subtle);">
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.5rem;">
-                <span style="color: var(--text-secondary);">Counterpart USD Wallet:</span>
-                <span style="font-family: var(--font-mono); font-weight: 700; color: #ffffff;">${{ usd_wallet.balance }}</span>
-            </div>
-            <a href="{% url 'exchange' %}" class="btn btn-secondary btn-block" style="padding: 0.55rem; font-size: 0.85rem;">
-                <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
-                <span>Convert to {{ active_curr }}</span>
-            </a>
+        <div class="chart-wrapper" style="height: 250px; display: grid; place-items: center;">
+            <canvas id="assetChart"></canvas>
+        </div>
+        <div style="display: flex; justify-content: space-around; margin-top: 0.75rem; font-size: 0.85rem; font-family: var(--font-mono);">
+            <span style="color: var(--primary);">● ৳{{ bdt_wallet.balance }} BDT</span>
+            <span style="color: var(--accent-indigo);">● ${{ usd_wallet.balance }} USD</span>
         </div>
     </div>
 </div>
 
-<!-- Recent Ledger Activity -->
+<!-- Full-Width MFS Direct Rails Banner -->
+<div class="glass-panel" style="padding: 1.75rem; margin-bottom: 2.25rem;">
+    <div class="card-title-row">
+        <div class="card-title">
+            <i data-lucide="zap" style="width: 20px; height: 20px; color: #f59e0b;"></i>
+            <span>Mobile Financial Services Gateway</span>
+        </div>
+        <span class="badge badge-success">ZERO FEES</span>
+    </div>
+    <div class="mfs-quick-grid">
+        <a href="{% url 'deposit' %}" class="mfs-badge-logo bkash">
+            <i data-lucide="smartphone" style="width: 28px; height: 28px;"></i>
+            <span>bKash Direct</span>
+        </a>
+        <a href="{% url 'deposit' %}" class="mfs-badge-logo nagad">
+            <i data-lucide="zap" style="width: 28px; height: 28px;"></i>
+            <span>Nagad Instant</span>
+        </a>
+        <a href="{% url 'deposit' %}" class="mfs-badge-logo rocket">
+            <i data-lucide="send" style="width: 28px; height: 28px;"></i>
+            <span>Rocket Core</span>
+        </a>
+    </div>
+</div>
+
+<!-- Recent Ledger Activity (Full Width) -->
 <div class="glass-panel transactions-panel">
     <div class="card-title-row">
-        <div class="card-title">Recent Ledger Postings ({{ active_curr }})</div>
-        <a href="{% url 'transactions' %}" class="btn btn-secondary" style="padding: 0.45rem 0.95rem; font-size: 0.825rem;">
-            <span>View Full Audit Log</span>
+        <div class="card-title">
+            <i data-lucide="receipt" style="width: 20px; height: 20px; color: var(--primary);"></i>
+            <span>Recent Postings ({{ active_curr }} Wallet)</span>
+        </div>
+        <a href="{% url 'transactions' %}" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+            <span>Full Ledger Log</span>
             <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
         </a>
     </div>
@@ -201,10 +231,10 @@
                     <tr>
                         <th>Timestamp</th>
                         <th>Transaction Ref</th>
-                        <th>Type / Purpose</th>
-                        <th>Amount</th>
+                        <th>Operation / Purpose</th>
+                        <th>Movement</th>
                         <th>Balance After</th>
-                        <th>Audit Status</th>
+                        <th>Ledger Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -226,12 +256,12 @@
                         <td class="cell-amount {% if entry.amount > 0 %}credit{% else %}debit{% endif %}">
                             {% if entry.amount > 0 %}+{% endif %}{{ entry.amount }} {{ entry.currency }}
                         </td>
-                        <td class="cell-code" style="color: #ffffff; font-weight: 600;">
+                        <td class="cell-code" style="color: #ffffff; font-weight: 700;">
                             {{ entry.balance_after }} {{ entry.currency }}
                         </td>
                         <td>
                             <span class="badge badge-success">
-                                <i data-lucide="check" style="width: 12px; height: 12px;"></i>
+                                <i data-lucide="check-check" style="width: 13px; height: 13px;"></i>
                                 <span>POSTED</span>
                             </span>
                         </td>
@@ -242,7 +272,7 @@
         </div>
     {% else %}
         <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-            <i data-lucide="inbox" style="width: 40px; height: 40px; margin-bottom: 0.75rem; opacity: 0.5;"></i>
+            <i data-lucide="inbox" style="width: 44px; height: 44px; margin-bottom: 0.75rem; opacity: 0.5;"></i>
             <p>No transactions posted yet in this wallet.</p>
             <a href="{% url 'deposit' %}" class="btn btn-primary" style="margin-top: 1rem;">
                 <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
@@ -255,28 +285,24 @@
 
 {% block extra_scripts %}
 <script>
-    // Initialize Cashflow Chart
-    const ctx = document.getElementById('cashflowChart');
-    if (ctx) {
-        const labels = {{ chart_labels|safe }};
-        const inflow = {{ chart_inflow|safe }};
-        const outflow = {{ chart_outflow|safe }};
-
-        new Chart(ctx, {
+    // 1. Cashflow Volume Bar Chart
+    const barCtx = document.getElementById('cashflowChart');
+    if (barCtx) {
+        new Chart(barCtx, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: {{ chart_labels|safe }},
                 datasets: [
                     {
                         label: 'Inflow (+)',
-                        data: inflow,
-                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                        data: {{ chart_inflow|safe }},
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
                         borderRadius: 6,
                     },
                     {
                         label: 'Outflow (-)',
-                        data: outflow,
-                        backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                        data: {{ chart_outflow|safe }},
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
                         borderRadius: 6,
                     }
                 ]
@@ -287,22 +313,39 @@
                 plugins: {
                     legend: {
                         position: 'top',
-                        labels: {
-                            color: '#94a3b8',
-                            font: { family: 'Plus Jakarta Sans', size: 12 }
-                        }
+                        labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 12, weight: 600 } }
                     }
                 },
                 scales: {
-                    x: {
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                        ticks: { color: '#64748b' }
-                    },
-                    y: {
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                        ticks: { color: '#64748b' }
-                    }
+                    x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#64748b' } },
+                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#64748b' } }
                 }
+            }
+        });
+    }
+
+    // 2. Asset Allocation Doughnut Chart
+    const donutCtx = document.getElementById('assetChart');
+    if (donutCtx) {
+        new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ asset_labels|safe }},
+                datasets: [{
+                    data: {{ asset_values|safe }},
+                    backgroundColor: ['#10b981', '#6366f1'],
+                    borderColor: '#0c1120',
+                    borderWidth: 3,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                cutout: '72%'
             }
         });
     }

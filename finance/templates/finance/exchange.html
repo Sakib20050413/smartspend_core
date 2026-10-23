@@ -13,87 +13,117 @@
     </div>
 </div>
 
-<div class="form-shell glass-panel">
-    <!-- Live Rate Ticker Card -->
-    <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 0.65rem;">
-                <i data-lucide="trending-up" style="width: 20px; height: 20px; color: var(--accent-indigo);"></i>
-                <span style="font-weight: 700; font-size: 0.95rem;">Live Interbank Exchange Rate</span>
+<!-- Bento 2-Column Split Layout (100% Full Width, Zero Side Gaps) -->
+<div class="bento-split-layout">
+    <!-- Left Column: Interactive Form -->
+    <div class="glass-panel bento-main-card">
+        <!-- Live Ticker Strip -->
+        <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                    <i data-lucide="trending-up" style="width: 20px; height: 20px; color: var(--accent-indigo);"></i>
+                    <span style="font-weight: 700; font-size: 0.95rem;">Live Exchange Rate</span>
+                </div>
+                <span class="badge badge-purple">SPREAD: {{ spread_margin }}</span>
             </div>
-            <span class="badge badge-purple">SPREAD: {{ spread_margin }}</span>
+            <div style="display: flex; justify-content: space-between; margin-top: 0.75rem; font-family: var(--font-mono); font-size: 0.9rem;">
+                <span>1 USD = <strong style="color: #ffffff;">{{ rate_usd_bdt }} BDT</strong></span>
+                <span>1 BDT = <strong style="color: #ffffff;">{{ rate_bdt_usd }} USD</strong></span>
+            </div>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 0.75rem; font-family: var(--font-mono); font-size: 0.9rem;">
-            <span>1 USD = <strong style="color: #ffffff;">{{ rate_usd_bdt }} BDT</strong></span>
-            <span>1 BDT = <strong style="color: #ffffff;">{{ rate_bdt_usd }} USD</strong></span>
-        </div>
+
+        <form method="post" action="{% url 'exchange' %}">
+            {% csrf_token %}
+
+            <!-- From Currency -->
+            <div class="form-group">
+                <label class="form-label">You Send (From)</label>
+                <div style="display: flex; gap: 0.75rem;">
+                    <select name="from_currency" id="fromCurrency" class="form-select" style="width: 150px;" onchange="updateCurrencies('from')">
+                        <option value="BDT" selected>🇧🇩 ৳ BDT</option>
+                        <option value="USD">🇺🇸 $ USD</option>
+                    </select>
+                    <div class="input-wrapper" style="flex: 1;">
+                        <input type="number" id="sendAmount" name="amount" class="form-input" placeholder="0.00" step="0.01" min="0.01" required oninput="calcExchange()">
+                    </div>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.35rem;" id="fromBalLabel">
+                    Available BDT: ৳{{ bdt_wallet.balance }}
+                </div>
+            </div>
+
+            <!-- Swap Icon -->
+            <div style="text-align: center; margin: 1rem 0;">
+                <button type="button" class="btn btn-secondary" style="border-radius: 9999px; width: 44px; height: 44px; padding: 0;" onclick="reverseCurrencies()">
+                    <i data-lucide="arrow-down-up" style="width: 20px; height: 20px;"></i>
+                </button>
+            </div>
+
+            <!-- To Currency -->
+            <div class="form-group">
+                <label class="form-label">You Receive (To)</label>
+                <div style="display: flex; gap: 0.75rem;">
+                    <select name="to_currency" id="toCurrency" class="form-select" style="width: 150px;" onchange="updateCurrencies('to')">
+                        <option value="USD" selected>🇺🇸 $ USD</option>
+                        <option value="BDT">🇧🇩 ৳ BDT</option>
+                    </select>
+                    <div class="input-wrapper" style="flex: 1;">
+                        <input type="text" id="receiveEstimate" class="form-input" placeholder="0.00" readonly style="background: rgba(255, 255, 255, 0.03); font-weight: 800; color: var(--primary);">
+                    </div>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.35rem;" id="toBalLabel">
+                    Available USD: ${{ usd_wallet.balance }}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" style="padding: 1.1rem; font-size: 1.05rem; margin-top: 1rem;">
+                <i data-lucide="refresh-cw" style="width: 20px; height: 20px;"></i>
+                <span>Confirm & Settle Exchange</span>
+            </button>
+        </form>
     </div>
 
-    <form method="post" action="{% url 'exchange' %}">
-        {% csrf_token %}
+    <!-- Right Column: Live FX Equation & Spread Graphic -->
+    <div class="glass-panel bento-visual-card" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(12, 17, 32, 0.95) 100%);">
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <span style="font-weight: 800; font-size: 1.15rem; color: #ffffff;">Liquidity Bridge Equation</span>
+                <span class="badge badge-info">ATOMIC SETTLEMENT</span>
+            </div>
 
-        <!-- From Currency & Source Wallet -->
-        <div class="form-group">
-            <label class="form-label">You Send (From)</label>
-            <div style="display: flex; gap: 0.75rem;">
-                <select name="from_currency" id="fromCurrency" class="form-select" style="width: 140px;" onchange="updateCurrencies('from')">
-                    <option value="BDT" selected>৳ BDT</option>
-                    <option value="USD">$ USD</option>
-                </select>
-                <div class="input-wrapper" style="flex: 1;">
-                    <input type="number" id="sendAmount" name="amount" class="form-input" placeholder="0.00" step="0.01" min="0.01" required oninput="calcExchange()">
+            <!-- Big Graphical Value Card -->
+            <div style="text-align: center; padding: 2.5rem 1rem; background: rgba(0,0,0,0.3); border-radius: var(--radius-lg); margin-bottom: 2rem;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Net Converted Arrival</div>
+                <div style="font-size: 3rem; font-weight: 800; color: var(--primary); font-family: var(--font-mono); margin: 0.5rem 0;" id="finalReceiveLabel">
+                    0.00
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);" id="appliedRateLabel">
+                    1 BDT = {{ rate_bdt_usd }} USD
                 </div>
             </div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.35rem;" id="fromBalLabel">
-                Available BDT: ৳{{ bdt_wallet.balance }}
-            </div>
-        </div>
 
-        <!-- Swap Icon -->
-        <div style="text-align: center; margin: 1rem 0;">
-            <button type="button" class="btn btn-secondary" style="border-radius: 9999px; width: 42px; height: 42px; padding: 0;" onclick="reverseCurrencies()">
-                <i data-lucide="arrow-down-up" style="width: 18px; height: 18px;"></i>
-            </button>
-        </div>
-
-        <!-- To Currency & Target Wallet -->
-        <div class="form-group">
-            <label class="form-label">You Receive (To)</label>
-            <div style="display: flex; gap: 0.75rem;">
-                <select name="to_currency" id="toCurrency" class="form-select" style="width: 140px;" onchange="updateCurrencies('to')">
-                    <option value="USD" selected>$ USD</option>
-                    <option value="BDT">৳ BDT</option>
-                </select>
-                <div class="input-wrapper" style="flex: 1;">
-                    <input type="text" id="receiveEstimate" class="form-input" placeholder="0.00" readonly style="background: rgba(255, 255, 255, 0.03); font-weight: 700; color: var(--primary);">
+            <!-- Live Calculation Breakdown -->
+            <div style="background: rgba(0,0,0,0.25); border-radius: var(--radius-md); padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                    <span style="color: var(--text-muted);">Platform FX Spread (0.5%):</span>
+                    <span style="color: var(--warning); font-family: var(--font-mono); font-weight: 700;" id="spreadLabel">0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                    <span style="color: var(--text-muted);">Execution Time:</span>
+                    <span style="color: #ffffff; font-weight: 700;">&lt; 150ms Instant</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                    <span style="color: var(--text-muted);">Dual-Leg Invariant:</span>
+                    <span style="color: var(--success); font-weight: 700;">Σ=0.00 Zero-Sum</span>
                 </div>
             </div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.35rem;" id="toBalLabel">
-                Available USD: ${{ usd_wallet.balance }}
-            </div>
         </div>
 
-        <!-- Conversion Breakdown -->
-        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.15rem; margin-bottom: 1.75rem;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem;">
-                <span style="color: var(--text-secondary);">Applied Rate:</span>
-                <span style="color: #ffffff; font-family: var(--font-mono);" id="appliedRateLabel">1 BDT = {{ rate_bdt_usd }} USD</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem;">
-                <span style="color: var(--text-secondary);">Platform Spread (0.5%):</span>
-                <span style="color: var(--warning); font-family: var(--font-mono);" id="spreadLabel">0.00</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding-top: 0.4rem; border-top: 1px solid var(--border-subtle);">
-                <span style="color: var(--text-primary); font-weight: 600;">Net Credited to Target Wallet:</span>
-                <span style="color: var(--primary); font-weight: 800; font-family: var(--font-mono);" id="finalReceiveLabel">0.00</span>
-            </div>
+        <div style="padding-top: 1.5rem; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 0.75rem;">
+            <i data-lucide="shield-check" style="width: 22px; height: 22px; color: var(--primary);"></i>
+            <span style="font-size: 0.85rem; color: var(--text-secondary);">Direct settlement account liquidity cross-transfer.</span>
         </div>
-
-        <button type="submit" class="btn btn-primary btn-block">
-            <i data-lucide="refresh-cw" style="width: 18px; height: 18px;"></i>
-            <span>Confirm & Settle Exchange</span>
-        </button>
-    </form>
+    </div>
 </div>
 {% endblock %}
 

@@ -181,6 +181,11 @@ def dashboard_view(request):
         inflow_data.append(float(day_in))
         outflow_data.append(float(abs(day_out)))
 
+    # Liquid Net Reserves across both currencies
+    net_reserves_bdt = bdt_wallet.balance + (usd_wallet.balance * Decimal("110.50"))
+    asset_labels = json.dumps(['BDT Liquid (৳)', 'USD Asset (equiv. ৳)'])
+    asset_values = json.dumps([float(bdt_wallet.balance), float(usd_wallet.balance * Decimal('110.50'))])
+
     context = {
         'bdt_wallet': bdt_wallet,
         'usd_wallet': usd_wallet,
@@ -189,10 +194,13 @@ def dashboard_view(request):
         'recent_entries': recent_entries,
         'total_inflow': total_inflow,
         'total_outflow': total_outflow_abs,
+        'net_reserves_bdt': net_reserves_bdt,
         'other_users': other_users,
         'chart_labels': json.dumps(labels),
         'chart_inflow': json.dumps(inflow_data),
         'chart_outflow': json.dumps(outflow_data),
+        'asset_labels': asset_labels,
+        'asset_values': asset_values,
     }
     return render(request, 'finance/dashboard.html', context)
 

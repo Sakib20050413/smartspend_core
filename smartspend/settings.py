@@ -48,7 +48,10 @@ ROOT_URLCONF = 'smartspend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            BASE_DIR / 'finance' / 'templates' / 'finance',
+            BASE_DIR / 'finance' / 'templates',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

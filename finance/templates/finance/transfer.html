@@ -9,100 +9,146 @@
             <span>Send Money</span>
             <span class="badge badge-success">P2P TRANSFERS</span>
         </h1>
-        <p>Transfer funds instantly with atomic locking & double-entry guarantees.</p>
+        <p>Transfer funds instantly with atomic row-locking & double-entry guarantees.</p>
     </div>
 </div>
 
-<div class="form-shell glass-panel">
-    <!-- Active Balance Header -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle);">
-        <div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Debiting Account</div>
-            <div style="font-size: 1.15rem; font-weight: 700; color: #ffffff;" id="walletLabel">
-                {{ wallet.currency }} Wallet
+<!-- Bento 2-Column Split Layout (100% Full Width, Zero Side Gaps) -->
+<div class="bento-split-layout">
+    <!-- Left Column: Interactive Form -->
+    <div class="glass-panel bento-main-card">
+        <!-- Balance Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle);">
+            <div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Debiting Account</div>
+                <div style="font-size: 1.25rem; font-weight: 800; color: #ffffff;" id="walletLabel">
+                    {{ wallet.currency }} Wallet
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Available Funds</div>
+                <div style="font-size: 1.25rem; font-weight: 800; color: var(--primary); font-family: var(--font-mono);" id="balanceDisplay">
+                    {% if wallet.currency == 'BDT' %}৳{% else %}${% endif %}{{ wallet.balance }}
+                </div>
             </div>
         </div>
-        <div style="text-align: right;">
-            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Available Funds</div>
-            <div style="font-size: 1.15rem; font-weight: 700; color: var(--primary); font-family: var(--font-mono);" id="balanceDisplay">
-                {% if wallet.currency == 'BDT' %}৳{% else %}${% endif %}{{ wallet.balance }}
+
+        <form method="post" action="{% url 'transfer' %}" id="transferForm">
+            {% csrf_token %}
+
+            <!-- Currency Selector Tabs -->
+            <div class="form-group">
+                <label class="form-label">Transfer Currency</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="currency" value="BDT" {% if wallet.currency == 'BDT' %}checked{% endif %} style="display: none;" onchange="switchCurrency('BDT', '{{ bdt_wallet.balance }}')">
+                        <div class="currency-tab {% if wallet.currency == 'BDT' %}active{% endif %}" id="tab-BDT" style="justify-content: center; padding: 0.85rem; border-radius: var(--radius-md);">
+                            <span>🇧🇩 ৳ BDT Account</span>
+                        </div>
+                    </label>
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="currency" value="USD" {% if wallet.currency == 'USD' %}checked{% endif %} style="display: none;" onchange="switchCurrency('USD', '{{ usd_wallet.balance }}')">
+                        <div class="currency-tab {% if wallet.currency == 'USD' %}active{% endif %}" id="tab-USD" style="justify-content: center; padding: 0.85rem; border-radius: var(--radius-md);">
+                            <span>🇺🇸 $ USD Account</span>
+                        </div>
+                    </label>
+                </div>
             </div>
-        </div>
+
+            <!-- Recipient Username -->
+            <div class="form-group">
+                <label class="form-label">Recipient Username</label>
+                <div class="input-wrapper input-with-icon">
+                    <i data-lucide="user" class="input-icon" style="width: 20px; height: 20px;"></i>
+                    <input type="text" id="receiverInput" name="receiver" class="form-input" placeholder="e.g. shafin" required autocomplete="off" oninput="updateFlowReceiver()">
+                </div>
+
+                <!-- Quick Contacts Chips -->
+                {% if other_users %}
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; align-items: center; flex-wrap: wrap;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Recent:</span>
+                        {% for u in other_users %}
+                            <button type="button" class="btn btn-secondary" style="padding: 0.3rem 0.75rem; font-size: 0.8rem; border-radius: var(--radius-full);" onclick="setReceiver('{{ u.username }}')">
+                                @{{ u.username }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Amount Input -->
+            <div class="form-group">
+                <label class="form-label">Amount to Send</label>
+                <div class="input-wrapper input-with-icon">
+                    <i data-lucide="send" class="input-icon" style="width: 20px; height: 20px;"></i>
+                    <input type="number" id="transferAmount" name="amount" class="form-input" placeholder="0.00" step="0.01" min="0.01" required oninput="calculateFee()">
+                </div>
+
+                <!-- Quick Amount Chips -->
+                <div style="display: flex; gap: 0.65rem; margin-top: 0.85rem; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;" onclick="setTransferAmount(500)">500</button>
+                    <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;" onclick="setTransferAmount(1000)">1,000</button>
+                    <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;" onclick="setTransferAmount(2500)">2,500</button>
+                    <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;" onclick="setTransferAmount(5000)">5,000</button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" style="padding: 1.1rem; font-size: 1.05rem; margin-top: 1rem;">
+                <i data-lucide="lock" style="width: 20px; height: 20px;"></i>
+                <span>Execute Atomic Transfer</span>
+            </button>
+        </form>
     </div>
 
-    <form method="post" action="{% url 'transfer' %}" id="transferForm">
-        {% csrf_token %}
-
-        <!-- Currency Selector -->
-        <div class="form-group">
-            <label class="form-label">Transfer Currency</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                <label style="cursor: pointer;">
-                    <input type="radio" name="currency" value="BDT" {% if wallet.currency == 'BDT' %}checked{% endif %} style="display: none;" onchange="switchCurrency('BDT', '{{ bdt_wallet.balance }}')">
-                    <div class="currency-tab {% if wallet.currency == 'BDT' %}active{% endif %}" id="tab-BDT" style="justify-content: center; padding: 0.75rem;">
-                        <span>৳ Bangladeshi Taka (BDT)</span>
-                    </div>
-                </label>
-                <label style="cursor: pointer;">
-                    <input type="radio" name="currency" value="USD" {% if wallet.currency == 'USD' %}checked{% endif %} style="display: none;" onchange="switchCurrency('USD', '{{ usd_wallet.balance }}')">
-                    <div class="currency-tab {% if wallet.currency == 'USD' %}active{% endif %}" id="tab-USD" style="justify-content: center; padding: 0.75rem;">
-                        <span>$ US Dollar (USD)</span>
-                    </div>
-                </label>
-            </div>
-        </div>
-
-        <!-- Recipient Username -->
-        <div class="form-group">
-            <label class="form-label">Recipient Username</label>
-            <div class="input-wrapper input-with-icon">
-                <i data-lucide="user" class="input-icon" style="width: 18px; height: 18px;"></i>
-                <input type="text" id="receiverInput" name="receiver" class="form-input" placeholder="e.g. shafin" required autocomplete="off">
+    <!-- Right Column: Live Graphical Transaction Flow Visualizer -->
+    <div class="glass-panel bento-visual-card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(12, 17, 32, 0.95) 100%);">
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <span style="font-weight: 800; font-size: 1.15rem; color: #ffffff;">Live Transaction Beam</span>
+                <span class="badge badge-purple">1.5% FEE GAUGE</span>
             </div>
 
-            <!-- Quick Contacts Chips -->
-            {% if other_users %}
-                <div style="display: flex; gap: 0.45rem; margin-top: 0.65rem; align-items: center; flex-wrap: wrap;">
-                    <span style="font-size: 0.75rem; color: var(--text-muted);">Quick Pick:</span>
-                    {% for u in other_users %}
-                        <button type="button" class="btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.75rem; border-radius: 9999px;" onclick="setReceiver('{{ u.username }}')">
-                            @{{ u.username }}
-                        </button>
-                    {% endfor %}
+            <!-- Graphical Transfer Flow Diagram -->
+            <div class="transfer-flow-graphic">
+                <div class="user-flow-node">
+                    <div class="flow-avatar sender">
+                        {{ user.username|slice:":1"|upper }}
+                    </div>
+                    <span style="font-weight: 700; font-size: 0.85rem; color: #ffffff;">@{{ user.username }}</span>
+                    <span style="font-size: 0.7rem; color: var(--primary);">Sender</span>
                 </div>
-            {% endif %}
+
+                <div class="flow-beam"></div>
+
+                <div class="user-flow-node">
+                    <div class="flow-avatar receiver" id="receiverAvatarNode">?</div>
+                    <span style="font-weight: 700; font-size: 0.85rem; color: #ffffff;" id="receiverNodeLabel">Recipient</span>
+                    <span style="font-size: 0.7rem; color: var(--success);">Receiver</span>
+                </div>
+            </div>
+
+            <!-- Live Fee & Debit Calculation Box -->
+            <div style="background: rgba(0,0,0,0.3); border-radius: var(--radius-lg); padding: 1.5rem; display: flex; flex-direction: column; gap: 0.85rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                    <span style="color: var(--text-muted);">Transfer Amount:</span>
+                    <span style="color: #ffffff; font-weight: 800; font-family: var(--font-mono);" id="netReceivedDisplay">0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                    <span style="color: var(--text-muted);">Platform Fee ({{ fee_rate_percent }}%):</span>
+                    <span style="color: var(--warning); font-weight: 800; font-family: var(--font-mono);" id="feeDisplay">0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle);">
+                    <span style="color: var(--text-primary); font-weight: 700;">Total Debited:</span>
+                    <span style="color: var(--danger); font-weight: 800; font-family: var(--font-mono);" id="totalDeductionDisplay">0.00</span>
+                </div>
+            </div>
         </div>
 
-        <!-- Amount Input -->
-        <div class="form-group">
-            <label class="form-label">Transfer Amount</label>
-            <div class="input-wrapper input-with-icon">
-                <i data-lucide="send" class="input-icon" style="width: 18px; height: 18px;"></i>
-                <input type="number" id="transferAmount" name="amount" class="form-input" placeholder="0.00" step="0.01" min="0.01" required oninput="calculateFee()">
-            </div>
+        <div style="padding-top: 1.5rem; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 0.75rem;">
+            <i data-lucide="shield-alert" style="width: 22px; height: 22px; color: var(--primary);"></i>
+            <span style="font-size: 0.85rem; color: var(--text-secondary);">Row locked via select_for_update() sorted ascending by ID.</span>
         </div>
-
-        <!-- Dynamic Live Ledger Calculation Box -->
-        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.15rem; margin-bottom: 1.75rem;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem;">
-                <span style="color: var(--text-secondary);">Recipient Net Receives:</span>
-                <span style="color: #ffffff; font-weight: 700; font-family: var(--font-mono);" id="netReceivedDisplay">0.00</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem;">
-                <span style="color: var(--text-secondary);">Platform Fee ({{ fee_rate_percent }}%):</span>
-                <span style="color: var(--warning); font-weight: 700; font-family: var(--font-mono);" id="feeDisplay">0.00</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding-top: 0.4rem; border-top: 1px solid var(--border-subtle);">
-                <span style="color: var(--text-primary); font-weight: 600;">Total Deduction from Your Wallet:</span>
-                <span style="color: var(--danger); font-weight: 800; font-family: var(--font-mono);" id="totalDeductionDisplay">0.00</span>
-            </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-block">
-            <i data-lucide="lock" style="width: 18px; height: 18px;"></i>
-            <span>Execute Atomic Transfer</span>
-        </button>
-    </form>
+    </div>
 </div>
 {% endblock %}
 
@@ -124,6 +170,23 @@
 
     function setReceiver(username) {
         document.getElementById('receiverInput').value = username;
+        updateFlowReceiver();
+    }
+
+    function updateFlowReceiver() {
+        const u = document.getElementById('receiverInput').value.trim();
+        if (u) {
+            document.getElementById('receiverAvatarNode').innerText = u.charAt(0).toUpperCase();
+            document.getElementById('receiverNodeLabel').innerText = '@' + u;
+        } else {
+            document.getElementById('receiverAvatarNode').innerText = '?';
+            document.getElementById('receiverNodeLabel').innerText = 'Recipient';
+        }
+    }
+
+    function setTransferAmount(val) {
+        document.getElementById('transferAmount').value = val;
+        calculateFee();
     }
 
     function calculateFee() {
