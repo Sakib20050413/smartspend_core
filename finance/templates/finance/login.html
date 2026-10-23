@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartSpend - Secure Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="auth-page">
+    <div class="glass-panel auth-card">
+        <div class="auth-header">
+            <div class="brand-icon" style="margin: 0 auto 1.25rem auto;">
+                <i data-lucide="shield-check" style="width: 24px; height: 24px;"></i>
+            </div>
+            <h2>Smart<span>Spend</span> Portal</h2>
+            <p>Enter your credentials to access your secure financial ledger.</p>
+        </div>
+
+        {% if messages %}
+            <div class="toast-container">
+                {% for message in messages %}
+                    <div class="toast toast-{{ message.tags }}">
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <div class="input-wrapper input-with-icon">
+                    <i data-lucide="user" class="input-icon" style="width: 18px; height: 18px;"></i>
+                    <input type="text" name="username" class="form-input" placeholder="admin" required autofocus>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <div class="input-wrapper input-with-icon">
+                    <i data-lucide="key" class="input-icon" style="width: 18px; height: 18px;"></i>
+                    <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
+                <i data-lucide="lock" style="width: 18px; height: 18px;"></i>
+                <span>Sign In Securely</span>
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Don't have an account yet? <a href="{% url 'register' %}">Create Account</a>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

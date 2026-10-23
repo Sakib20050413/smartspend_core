@@ -1,0 +1,179 @@
+{% extends 'finance/base.html' %}
+
+{% block title %}Ledger Audit & History{% endblock %}
+
+{% block content %}
+<div class="top-header">
+    <div class="header-title-block">
+        <h1>
+            <span>Ledger Audit Trail</span>
+            <span class="badge badge-success">ZERO-SUM VERIFIED</span>
+        </h1>
+        <p>Immutable double-entry transaction history with row-by-row balance snapshots.</p>
+    </div>
+</div>
+
+<!-- Filters & Search Bar -->
+<div class="glass-panel" style="padding: 1.25rem 1.75rem; margin-bottom: 2rem;">
+    <form method="get" action="{% url 'transactions' %}" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 240px;" class="input-wrapper input-with-icon">
+            <i data-lucide="search" class="input-icon" style="width: 18px; height: 18px;"></i>
+            <input type="text" name="q" class="form-input" placeholder="Search by Transaction ID or reference..." value="{{ search_query }}">
+        </div>
+
+        <select name="currency" class="form-select" style="width: 140px;" onchange="this.form.submit()">
+            <option value="ALL" {% if curr_filter == 'ALL' %}selected{% endif %}>All Currencies</option>
+            <option value="BDT" {% if curr_filter == 'BDT' %}selected{% endif %}>BDT (৳)</option>
+            <option value="USD" {% if curr_filter == 'USD' %}selected{% endif %}>USD ($)</option>
+        </select>
+
+        <select name="type" class="form-select" style="width: 170px;" onchange="this.form.submit()">
+            <option value="ALL" {% if type_filter == 'ALL' %}selected{% endif %}>All Types</option>
+            <option value="P2P_TRANSFER" {% if type_filter == 'P2P_TRANSFER' %}selected{% endif %}>P2P Transfer</option>
+            <option value="MFS_DEPOSIT" {% if type_filter == 'MFS_DEPOSIT' %}selected{% endif %}>MFS Deposit</option>
+            <option value="MERCHANT_PAYMENT" {% if type_filter == 'MERCHANT_PAYMENT' %}selected{% endif %}>Card Payment</option>
+        </select>
+
+        <button type="submit" class="btn btn-secondary">
+            <i data-lucide="filter" style="width: 16px; height: 16px;"></i>
+            <span>Filter</span>
+        </button>
+
+        {% if search_query or curr_filter != 'ALL' or type_filter != 'ALL' %}
+            <a href="{% url 'transactions' %}" class="btn btn-secondary" style="color: var(--danger);">Reset</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Ledger Audit Table -->
+<div class="glass-panel transactions-panel">
+    {% if transaction_records %}
+        <div class="table-responsive">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Transaction ID</th>
+                        <th>Type / Channel</th>
+                        <th>User Movement</th>
+                        <th>Balance Snapshot</th>
+                        <th>Ledger Verification</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in transaction_records %}
+                    <tr>
+                        <td>{{ rec.entry.created_at|date:"M d, Y • H:i" }}</td>
+                        <td class="cell-code">
+                            {{ rec.tx.id|stringformat:"s"|slice:":8" }}...
+                            {% if rec.tx.external_reference %}
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">{{ rec.tx.external_reference }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {% if rec.entry.amount > 0 %}badge-success{% else %}badge-purple{% endif %}">
+                                {{ rec.tx.get_transaction_type_display }} ({{ rec.tx.channel }})
+                            </span>
+                        </td>
+                        <td class="cell-amount {% if rec.entry.amount > 0 %}credit{% else %}debit{% endif %}">
+                            {% if rec.entry.amount > 0 %}+{% endif %}{{ rec.entry.amount }} {{ rec.entry.currency }}
+                        </td>
+                        <td class="cell-code" style="color: #ffffff; font-weight: 600;">
+                            {{ rec.entry.balance_after }} {{ rec.entry.currency }}
+                        </td>
+                        <td>
+                            {% if rec.is_balanced %}
+                                <span class="badge badge-success">
+                                    <i data-lucide="check-check" style="width: 12px; height: 12px;"></i>
+                                    <span>BALANCED (Σ=0.00)</span>
+                                </span>
+                            {% else %}
+                                <span class="badge badge-warning">AUDIT FLAG</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;" onclick="openAuditModal('{{ rec.tx.id }}')">
+                                <i data-lucide="file-text" style="width: 14px; height: 14px;"></i>
+                                <span>Audit Proof</span>
+                            </button>
+
+                            <!-- Hidden Modal Details Data -->
+                            <div id="modal-data-{{ rec.tx.id }}" style="display: none;">
+                                <div style="margin-bottom: 1rem;">
+                                    <strong>Transaction ID:</strong> {{ rec.tx.id }}<br>
+                                    <strong>Type:</strong> {{ rec.tx.get_transaction_type_display }} | <strong>Status:</strong> {{ rec.tx.status }}<br>
+                                    <strong>Idempotency Key:</strong> {{ rec.tx.idempotency_key }}<br>
+                                    <strong>Channel:</strong> {{ rec.tx.channel }} | <strong>IP:</strong> {{ rec.tx.initiated_by_ip|default:"127.0.0.1" }}
+                                </div>
+                                <table class="styled-table" style="background: rgba(0,0,0,0.3); border-radius: 8px;">
+                                    <thead>
+                                        <tr>
+                                            <th>Account Kind</th>
+                                            <th>Leg / Amount</th>
+                                            <th>Currency</th>
+                                            <th>Snapshot After</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for leg in rec.all_entries %}
+                                        <tr>
+                                            <td>{{ leg.wallet.get_kind_display }}</td>
+                                            <td class="cell-amount {% if leg.amount > 0 %}credit{% else %}debit{% endif %}">
+                                                {% if leg.amount > 0 %}+{% endif %}{{ leg.amount }}
+                                            </td>
+                                            <td>{{ leg.currency }}</td>
+                                            <td class="cell-code">{{ leg.balance_after }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 4rem 1rem; color: var(--text-muted);">
+            <i data-lucide="search-x" style="width: 48px; height: 48px; opacity: 0.4; margin-bottom: 1rem;"></i>
+            <h3>No transaction entries found</h3>
+            <p style="margin-top: 0.5rem;">Try modifying your search or filter options.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal Dialog -->
+<div id="auditModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999; backdrop-filter: blur(8px); place-items: center; padding: 1.5rem;">
+    <div class="glass-panel" style="max-width: 680px; width: 100%; padding: 2rem; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff;">Double-Entry Ledger Audit Proof</h3>
+            <button type="button" class="btn btn-secondary" style="padding: 0.35rem 0.65rem;" onclick="closeAuditModal()">✕</button>
+        </div>
+        <div id="modalBody"></div>
+        <div style="margin-top: 1.5rem; text-align: right;">
+            <button type="button" class="btn btn-primary" onclick="window.print()">
+                <i data-lucide="printer" style="width: 16px; height: 16px;"></i>
+                <span>Print Official Slip</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function openAuditModal(txId) {
+        const dataEl = document.getElementById('modal-data-' + txId);
+        if (dataEl) {
+            document.getElementById('modalBody').innerHTML = dataEl.innerHTML;
+            document.getElementById('auditModal').style.display = 'grid';
+        }
+    }
+
+    function closeAuditModal() {
+        document.getElementById('auditModal').style.display = 'none';
+    }
+</script>
+{% endblock %}

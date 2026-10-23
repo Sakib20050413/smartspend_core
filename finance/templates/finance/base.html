@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartSpend - {% block title %}Enterprise Fintech{% endblock %}</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="app-shell">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar">
+            <div class="brand-header">
+                <div class="brand-icon">
+                    <i data-lucide="shield-check" style="width: 22px; height: 22px;"></i>
+                </div>
+                <div class="brand-title">Smart<span>Spend</span></div>
+                <span class="brand-badge">PRO</span>
+            </div>
+
+            <div class="nav-section-title">Core Banking</div>
+            <ul class="nav-menu">
+                <li>
+                    <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i data-lucide="layout-dashboard"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'transfer' %}" class="nav-link {% if request.resolver_match.url_name == 'transfer' %}active{% endif %}">
+                        <i data-lucide="send"></i>
+                        <span>Send Money</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'deposit' %}" class="nav-link {% if request.resolver_match.url_name == 'deposit' %}active{% endif %}">
+                        <i data-lucide="arrow-down-left"></i>
+                        <span>MFS Cash-In</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'exchange' %}" class="nav-link {% if request.resolver_match.url_name == 'exchange' %}active{% endif %}">
+                        <i data-lucide="arrow-left-right"></i>
+                        <span>FX Exchange</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'cards' %}" class="nav-link {% if request.resolver_match.url_name == 'cards' %}active{% endif %}">
+                        <i data-lucide="credit-card"></i>
+                        <span>Virtual Cards</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="nav-section-title">Ledger & Trust</div>
+            <ul class="nav-menu" style="flex: none; margin-bottom: auto;">
+                <li>
+                    <a href="{% url 'transactions' %}" class="nav-link {% if request.resolver_match.url_name == 'transactions' %}active{% endif %}">
+                        <i data-lucide="receipt"></i>
+                        <span>Ledger Audit</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'security' %}" class="nav-link {% if request.resolver_match.url_name == 'security' %}active{% endif %}">
+                        <i data-lucide="lock"></i>
+                        <span>SEC Compliance</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/" target="_blank" class="nav-link">
+                        <i data-lucide="database"></i>
+                        <span>Django Admin</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-compact-card">
+                    <div class="user-avatar">
+                        {{ user.username|slice:":1"|upper }}
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">{{ user.username }}</div>
+                        <div class="user-role">VERIFIED USER</div>
+                    </div>
+                </div>
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-logout">
+                        <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+                        <span>Log Out</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="app-main">
+            <!-- Global Flash Messages / Toasts -->
+            {% if messages %}
+                <div class="toast-container">
+                    {% for message in messages %}
+                        <div class="toast toast-{{ message.tags }}">
+                            {% if message.tags == 'success' %}
+                                <i data-lucide="check-circle" style="width: 20px; height: 20px;"></i>
+                            {% elif message.tags == 'error' %}
+                                <i data-lucide="alert-octagon" style="width: 20px; height: 20px;"></i>
+                            {% else %}
+                                <i data-lucide="info" style="width: 20px; height: 20px;"></i>
+                            {% endif %}
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Initialize Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

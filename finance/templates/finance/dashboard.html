@@ -1,0 +1,310 @@
+{% extends 'finance/base.html' %}
+
+{% block title %}Executive Financial Dashboard{% endblock %}
+
+{% block content %}
+<!-- Top Header & Currency Switcher -->
+<div class="top-header">
+    <div class="header-title-block">
+        <h1>
+            <span>Overview</span>
+            <span class="badge badge-success">LIVE LEDGER</span>
+        </h1>
+        <p>Real-time double-entry balances for <strong>{{ user.username }}</strong></p>
+    </div>
+
+    <div class="header-actions">
+        <div class="currency-switcher">
+            <a href="?currency=BDT" class="currency-tab {% if active_curr == 'BDT' %}active{% endif %}">
+                <span>৳ BDT</span>
+            </a>
+            <a href="?currency=USD" class="currency-tab {% if active_curr == 'USD' %}active{% endif %}">
+                <span>$ USD</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Primary Stats Grid -->
+<div class="stats-grid">
+    <!-- Active Balance Card -->
+    <div class="glass-panel stat-card featured-balance">
+        <div class="stat-header">
+            <span class="stat-title">{{ active_curr }} Available Liquidity</span>
+            <div class="stat-icon-badge">
+                <i data-lucide="wallet" style="width: 20px; height: 20px; color: var(--primary);"></i>
+            </div>
+        </div>
+        <div>
+            <div class="balance-value">
+                {% if active_curr == 'BDT' %}৳{% else %}${% endif %}{{ active_wallet.balance }}
+                <span>{{ active_curr }}</span>
+            </div>
+        </div>
+        <div class="stat-footer">
+            <span>ID: {{ active_wallet.id|stringformat:"s"|slice:":8" }}...</span>
+            <span class="trend-badge trend-up">
+                <i data-lucide="check" style="width: 14px; height: 14px;"></i>
+                <span>100% AUDITED</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- Monthly Inflow -->
+    <div class="glass-panel stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Inflow (30 Days)</span>
+            <div class="stat-icon-badge">
+                <i data-lucide="arrow-down-right" style="width: 20px; height: 20px; color: var(--success);"></i>
+            </div>
+        </div>
+        <div>
+            <div class="balance-value" style="font-size: 2rem; color: var(--success);">
+                +{% if active_curr == 'BDT' %}৳{% else %}${% endif %}{{ total_inflow }}
+            </div>
+        </div>
+        <div class="stat-footer">
+            <span>Deposits & Transfers</span>
+            <span class="trend-badge trend-up">+14.2%</span>
+        </div>
+    </div>
+
+    <!-- Monthly Outflow -->
+    <div class="glass-panel stat-card">
+        <div class="stat-header">
+            <span class="stat-title">Outflow (30 Days)</span>
+            <div class="stat-icon-badge">
+                <i data-lucide="arrow-up-right" style="width: 20px; height: 20px; color: var(--danger);"></i>
+            </div>
+        </div>
+        <div>
+            <div class="balance-value" style="font-size: 2rem; color: var(--danger);">
+                -{% if active_curr == 'BDT' %}৳{% else %}${% endif %}{{ total_outflow }}
+            </div>
+        </div>
+        <div class="stat-footer">
+            <span>P2P Spends & Fees</span>
+            <span class="trend-badge trend-down">-3.8%</span>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Action Strip -->
+<div class="quick-action-strip">
+    <a href="{% url 'transfer' %}?currency={{ active_curr }}" class="action-chip send">
+        <div class="action-chip-icon">
+            <i data-lucide="send" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div>
+            <div>Send Money</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Instant P2P Transfer</div>
+        </div>
+    </a>
+
+    <a href="{% url 'deposit' %}" class="action-chip deposit">
+        <div class="action-chip-icon">
+            <i data-lucide="smartphone" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div>
+            <div>MFS Cash-In</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">bKash • Nagad • Rocket</div>
+        </div>
+    </a>
+
+    <a href="{% url 'exchange' %}" class="action-chip exchange">
+        <div class="action-chip-icon">
+            <i data-lucide="arrow-left-right" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div>
+            <div>FX Bridge</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">BDT ⇋ USD Converter</div>
+        </div>
+    </a>
+
+    <a href="{% url 'cards' %}" class="action-chip card">
+        <div class="action-chip-icon">
+            <i data-lucide="credit-card" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div>
+            <div>Virtual Card</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">BaaS Titanium Visa</div>
+        </div>
+    </a>
+</div>
+
+<!-- Split Section: Interactive Chart & MFS Gateway Status -->
+<div class="dashboard-split">
+    <!-- Chart.js Cashflow Analysis -->
+    <div class="glass-panel analytics-card">
+        <div class="card-title-row">
+            <div class="card-title">Cash Flow & Activity Trends</div>
+            <span class="badge badge-info">7 DAYS TRAILING</span>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="cashflowChart"></canvas>
+        </div>
+    </div>
+
+    <!-- MFS Bangladesh Rail Integrations -->
+    <div class="glass-panel side-summary-card">
+        <div>
+            <div class="card-title-row">
+                <div class="card-title">MFS Direct Rails</div>
+                <span class="badge badge-success">ONLINE</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                Direct liquidity bridges connected with Bangladesh Mobile Financial Services.
+            </p>
+            <div class="mfs-quick-logos">
+                <a href="{% url 'deposit' %}" class="mfs-badge-logo bkash">
+                    <i data-lucide="smartphone" style="width: 22px; height: 22px;"></i>
+                    <span>bKash</span>
+                </a>
+                <a href="{% url 'deposit' %}" class="mfs-badge-logo nagad">
+                    <i data-lucide="zap" style="width: 22px; height: 22px;"></i>
+                    <span>Nagad</span>
+                </a>
+                <a href="{% url 'deposit' %}" class="mfs-badge-logo rocket">
+                    <i data-lucide="send" style="width: 22px; height: 22px;"></i>
+                    <span>Rocket</span>
+                </a>
+            </div>
+        </div>
+
+        <div style="padding-top: 1.25rem; border-top: 1px solid var(--border-subtle);">
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                <span style="color: var(--text-secondary);">Counterpart USD Wallet:</span>
+                <span style="font-family: var(--font-mono); font-weight: 700; color: #ffffff;">${{ usd_wallet.balance }}</span>
+            </div>
+            <a href="{% url 'exchange' %}" class="btn btn-secondary btn-block" style="padding: 0.55rem; font-size: 0.85rem;">
+                <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+                <span>Convert to {{ active_curr }}</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Ledger Activity -->
+<div class="glass-panel transactions-panel">
+    <div class="card-title-row">
+        <div class="card-title">Recent Ledger Postings ({{ active_curr }})</div>
+        <a href="{% url 'transactions' %}" class="btn btn-secondary" style="padding: 0.45rem 0.95rem; font-size: 0.825rem;">
+            <span>View Full Audit Log</span>
+            <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+        </a>
+    </div>
+
+    {% if recent_entries %}
+        <div class="table-responsive">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Transaction Ref</th>
+                        <th>Type / Purpose</th>
+                        <th>Amount</th>
+                        <th>Balance After</th>
+                        <th>Audit Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in recent_entries %}
+                    <tr>
+                        <td>{{ entry.created_at|date:"M d, Y • H:i" }}</td>
+                        <td class="cell-code">
+                            {% if entry.transaction.external_reference %}
+                                {{ entry.transaction.external_reference }}
+                            {% else %}
+                                TX-{{ entry.transaction.id|stringformat:"s"|slice:":8" }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {% if entry.amount > 0 %}badge-success{% else %}badge-purple{% endif %}">
+                                {{ entry.transaction.get_transaction_type_display }} ({{ entry.purpose }})
+                            </span>
+                        </td>
+                        <td class="cell-amount {% if entry.amount > 0 %}credit{% else %}debit{% endif %}">
+                            {% if entry.amount > 0 %}+{% endif %}{{ entry.amount }} {{ entry.currency }}
+                        </td>
+                        <td class="cell-code" style="color: #ffffff; font-weight: 600;">
+                            {{ entry.balance_after }} {{ entry.currency }}
+                        </td>
+                        <td>
+                            <span class="badge badge-success">
+                                <i data-lucide="check" style="width: 12px; height: 12px;"></i>
+                                <span>POSTED</span>
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+            <i data-lucide="inbox" style="width: 40px; height: 40px; margin-bottom: 0.75rem; opacity: 0.5;"></i>
+            <p>No transactions posted yet in this wallet.</p>
+            <a href="{% url 'deposit' %}" class="btn btn-primary" style="margin-top: 1rem;">
+                <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                <span>Deposit First Funds</span>
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize Cashflow Chart
+    const ctx = document.getElementById('cashflowChart');
+    if (ctx) {
+        const labels = {{ chart_labels|safe }};
+        const inflow = {{ chart_inflow|safe }};
+        const outflow = {{ chart_outflow|safe }};
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Inflow (+)',
+                        data: inflow,
+                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                        borderRadius: 6,
+                    },
+                    {
+                        label: 'Outflow (-)',
+                        data: outflow,
+                        backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                        borderRadius: 6,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#94a3b8',
+                            font: { family: 'Plus Jakarta Sans', size: 12 }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#64748b' }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#64748b' }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

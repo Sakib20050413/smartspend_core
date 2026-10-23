@@ -1,0 +1,8 @@
+Django>=5.0,<5.1
+djangorestframework>=3.15,<3.16
+psycopg2-binary>=2.9,<3.0
+celery>=5.3,<5.4
+redis>=5.0,<6.0
+python-dotenv>=1.0,<1.1
+whitenoise>=6.6.0
+dj-database-url>=2.1.0

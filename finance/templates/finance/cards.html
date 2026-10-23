@@ -1,0 +1,166 @@
+{% extends 'finance/base.html' %}
+
+{% block title %}Virtual Cards (BaaS){% endblock %}
+
+{% block content %}
+<div class="top-header">
+    <div class="header-title-block">
+        <h1>
+            <span>Virtual Cards</span>
+            <span class="badge badge-purple">BAAS TITANIUM</span>
+        </h1>
+        <p>Instant digital Visa/Mastercard linked directly to your SmartSpend USD liquidity.</p>
+    </div>
+</div>
+
+<!-- 3D Card Display -->
+<div class="virtual-card-container">
+    <div class="virtual-card" id="virtualCard">
+        <div class="card-top-row">
+            <div class="card-chip"></div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i data-lucide="wifi" style="width: 22px; height: 22px; color: rgba(255, 255, 255, 0.7); transform: rotate(90deg);"></i>
+                <div class="card-network-logo">VISA</div>
+            </div>
+        </div>
+
+        <div class="card-number-display" id="cardNumberDisplay">
+            ••••  ••••  ••••  4242
+        </div>
+
+        <div class="card-bottom-row">
+            <div>
+                <div class="card-label">Cardholder</div>
+                <div class="card-val">{{ card_holder }}</div>
+            </div>
+            <div>
+                <div class="card-label">Expires</div>
+                <div class="card-val">{{ card_expiry }}</div>
+            </div>
+            <div>
+                <div class="card-label">CVV</div>
+                <div class="card-val" id="cardCvvDisplay">•••</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Reveal / Freeze Toggle Controls -->
+    <div style="display: flex; justify-content: center; gap: 0.75rem; margin-top: 1.25rem;">
+        <button type="button" class="btn btn-secondary" onclick="toggleCardDetails()" id="btnReveal">
+            <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+            <span>Reveal Details</span>
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="toggleFreeze()" id="btnFreeze">
+            <i data-lucide="snowflake" style="width: 16px; height: 16px;"></i>
+            <span>Freeze Card</span>
+        </button>
+    </div>
+</div>
+
+<!-- Card Settings & Merchant Swipe Simulator -->
+<div class="dashboard-split" style="max-width: 950px; margin: 0 auto;">
+    <!-- Controls & Security Settings -->
+    <div class="glass-panel" style="padding: 1.75rem;">
+        <div class="card-title-row">
+            <div class="card-title">Card Security & Limits</div>
+            <span class="badge badge-success">ACTIVE</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 600; font-size: 0.95rem;">Online Purchases</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">E-commerce and subscriptions</div>
+                </div>
+                <span class="badge badge-success">ENABLED</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 600; font-size: 0.95rem;">International Spend</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Global multi-currency checkout</div>
+                </div>
+                <span class="badge badge-success">ENABLED</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 600; font-size: 0.95rem;">Linked Liquidity</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Direct debits from USD Wallet</div>
+                </div>
+                <div style="font-family: var(--font-mono); font-weight: 700; color: #ffffff;">${{ usd_wallet.balance }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BaaS Merchant Swipe Simulator -->
+    <div class="glass-panel" style="padding: 1.75rem;">
+        <div class="card-title-row">
+            <div class="card-title">Simulate Merchant Charge</div>
+            <span class="badge badge-purple">TEST RUNTIME</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+            Test the live BaaS webhook gateway by simulating an instant online merchant transaction.
+        </p>
+
+        <form method="post" action="{% url 'cards' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="simulate_spend">
+
+            <div class="form-group">
+                <label class="form-label">Merchant</label>
+                <select name="merchant" class="form-select">
+                    <option value="Netflix Subscription">Netflix ($15.99)</option>
+                    <option value="Uber Ride">Uber Ride ($22.50)</option>
+                    <option value="Amazon Web Services">AWS Cloud Hosting ($45.00)</option>
+                    <option value="OpenAI Platform">OpenAI API Billing ($20.00)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Charge Amount (USD $)</label>
+                <input type="number" name="amount" class="form-input" value="15.99" step="0.01" min="1" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+                <i data-lucide="zap" style="width: 18px; height: 18px;"></i>
+                <span>Authorize & Spend via Card</span>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let isRevealed = false;
+    let isFrozen = false;
+    const realNumber = "{{ card_number }}";
+    const maskedNumber = "••••  ••••  ••••  4242";
+    const realCvv = "{{ card_cvv }}";
+    const maskedCvv = "•••";
+
+    function toggleCardDetails() {
+        isRevealed = !isRevealed;
+        document.getElementById('cardNumberDisplay').innerText = isRevealed ? realNumber : maskedNumber;
+        document.getElementById('cardCvvDisplay').innerText = isRevealed ? realCvv : maskedCvv;
+        document.getElementById('btnReveal').innerHTML = isRevealed ? 
+            '<i data-lucide="eye-off" style="width: 16px; height: 16px;"></i><span>Hide Details</span>' :
+            '<i data-lucide="eye" style="width: 16px; height: 16px;"></i><span>Reveal Details</span>';
+        lucide.createIcons();
+    }
+
+    function toggleFreeze() {
+        isFrozen = !isFrozen;
+        const card = document.getElementById('virtualCard');
+        if (isFrozen) {
+            card.style.filter = 'grayscale(1) brightness(0.6)';
+            document.getElementById('btnFreeze').innerHTML = '<i data-lucide="sun" style="width: 16px; height: 16px;"></i><span>Unfreeze</span>';
+        } else {
+            card.style.filter = 'none';
+            document.getElementById('btnFreeze').innerHTML = '<i data-lucide="snowflake" style="width: 16px; height: 16px;"></i><span>Freeze Card</span>';
+        }
+        lucide.createIcons();
+    }
+</script>
+{% endblock %}
